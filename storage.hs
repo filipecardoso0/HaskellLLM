@@ -13,14 +13,14 @@ getStorageHead (xs) = head(xs)
 
 -- Gets the value bound to var 
 getVariableVal :: StorageVariable -> Storage -> StorageVariableVal
-getVariableVal _ [] = error "Storage.getVariableVal: There is no variable with the given symbol in storage"
+getVariableVal _ [] = error "Run-time error"
 getVariableVal var (x:xs) 
                         | (fst (x) == var) = snd x
                         | otherwise = getVariableVal var (xs)
 
 -- Updates the value bound to var 
 updateVariable :: StorageVariable -> StorageVariableVal -> Storage -> Storage
-updateVariable _ _ [] = error "Storage.updateVariable: Variable not found... Impossible to update the variable!"
+updateVariable _ _ [] = error "Run-time error"
 updateVariable var newvarval (x:xs)
                                 | (fst x == var) = (var, newvarval) : xs
                                 | otherwise = x : updateVariable var newvarval xs 
@@ -40,6 +40,6 @@ replace val (x:xs)
                 | otherwise = x : replace val xs
 
 -- Generates an Empty Storage
-emptyStrg :: Storage 
-emptyStrg = []
+createEmptyState :: Storage 
+createEmptyState = []
 
