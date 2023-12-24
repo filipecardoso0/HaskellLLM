@@ -1,7 +1,10 @@
 import Stack 
+import Storage 
 
--- TODO FALTA VERIFICAR SE É UM NUMERO E SE FOR AÍ SIM 
--- FAZER AS OPERAÇÕES 
+type EvaluationStack = (Stack, Storage)
+
+{- A LOT MORE OF CODE COMENTING NEEDS TO BE DONE -}
+{- TODO: RENAME STORAGE TO STATE -}
 
 add :: Stack -> Stack 
 add stack = if (isNumber(elem1) && isNumber(elem2)) 
@@ -42,3 +45,18 @@ le stack = if (isNumber(elem1) && isNumber(elem2))
         elem1 = top(stack)
         elem2 = top(pop(stack))
         updatedStack = pop(pop(stack))
+
+-- Pushes the value bound to var onto the stack 
+fetch :: StorageVariable -> Storage -> Stack -> Stack
+fetch var strg stack = pushInt val stack 
+        where val = variableValToInt(getVariableVal var strg)
+
+-- pops the topmost element of the stack and updates the storage so that the popped value is bound to x
+store :: StorageVariable -> Stack -> Storage -> EvaluationStack
+store var stack storage = (newstack, newstorage)
+        where newstack = pop(stack) 
+              newstorage = updateVariable var (intToVariableVal(fromStackElementInt(top stack))) storage
+
+-- returns the input stack and state (storage)
+noop :: Stack -> Storage -> EvaluationStack
+noop stack storage = (stack, storage)
