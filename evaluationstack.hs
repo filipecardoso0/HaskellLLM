@@ -1,7 +1,7 @@
 import Stack 
-import Storage 
+import State 
 
-type EvaluationStack = (Stack, Storage)
+type EvaluationStack = (Stack, State)
 type BranchOutput = (Stack, Code)
 
 {- ORGANIZAR MELHOR O CODIGO -> PRECISA DE SER MUITO MELHOR ORGANIZADO -}
@@ -12,7 +12,6 @@ data Inst =
 type Code = [Inst]
 
 {- A LOT MORE OF CODE COMENTING NEEDS TO BE DONE -}
-{- TODO: RENAME STORAGE TO STATE -}
 
 add :: Stack -> Stack 
 add stack = if (isNumber(elem1) && isNumber(elem2)) 
@@ -55,19 +54,19 @@ le stack = if (isNumber(elem1) && isNumber(elem2))
         updatedStack = pop(pop(stack))
 
 -- Pushes the value bound to var onto the stack 
-fetch :: StorageVariable -> Storage -> Stack -> Stack
-fetch var strg stack = pushInt val stack 
-        where val = variableValToInt(getVariableVal var strg)
+fetch :: StateVariable -> State -> Stack -> Stack
+fetch var state stack = pushInt val stack 
+        where val = variableValToInt(getVariableVal var state)
 
--- pops the topmost element of the stack and updates the storage so that the popped value is bound to x
-store :: StorageVariable -> Stack -> Storage -> EvaluationStack
-store var stack storage = (newstack, newstorage)
+-- pops the topmost element of the stack and updates the State so that the popped value is bound to x
+store :: StateVariable -> Stack -> State -> EvaluationStack
+store var stack state = (newstack, newstate)
         where newstack = pop(stack) 
-              newstorage = updateVariable var (intToVariableVal(fromStackElementInt(top stack))) storage
+              newstate = updateVariable var (intToVariableVal(fromStackElementInt(top stack))) state
 
--- returns the input stack and state (storage)
-noop :: Stack -> Storage -> EvaluationStack
-noop stack storage = (stack, storage)
+-- returns the input stack and state (state)
+noop :: Stack -> State -> EvaluationStack
+noop stack state = (stack, state)
 
 -- Conditional Statement (A boolean value (kind of) has to be specified)
 branch :: Code -> Code -> Stack -> BranchOutput 

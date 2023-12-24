@@ -1,36 +1,36 @@
-module Storage where 
+module State where 
 
-data StorageVariable = StorageVariable Char
+data StateVariable = StateVariable Char
     deriving (Show, Eq)
-data StorageVariableVal = StorageVariableVal Int 
+data StateVariableVal = StateVariableVal Int 
     deriving (Show, Eq)
-type StorageTuple = (StorageVariable, StorageVariableVal) 
-type Storage = [StorageTuple]
+type StateTuple = (StateVariable, StateVariableVal) 
+type State = [StateTuple]
 
--- Gets the head of the storage list  
-getStorageHead :: Storage -> StorageTuple
-getStorageHead (xs) = head(xs)
+-- Gets the head of the state list  
+getStateHead :: State -> StateTuple
+getStateHead (xs) = head(xs)
 
 -- Gets the value bound to var 
-getVariableVal :: StorageVariable -> Storage -> StorageVariableVal
+getVariableVal :: StateVariable -> State -> StateVariableVal
 getVariableVal _ [] = error "Run-time error"
 getVariableVal var (x:xs) 
                         | (fst (x) == var) = snd x
                         | otherwise = getVariableVal var (xs)
 
 -- Updates the value bound to var 
-updateVariable :: StorageVariable -> StorageVariableVal -> Storage -> Storage
+updateVariable :: StateVariable -> StateVariableVal -> State -> State
 updateVariable _ _ [] = error "Run-time error"
 updateVariable var newvarval (x:xs)
                                 | (fst x == var) = (var, newvarval) : xs
                                 | otherwise = x : updateVariable var newvarval xs 
 
 -- Converts the variable value into an int
-variableValToInt :: StorageVariableVal -> Int 
-variableValToInt (StorageVariableVal val) = val 
+variableValToInt :: StateVariableVal -> Int 
+variableValToInt (StateVariableVal val) = val 
 
-intToVariableVal :: Int -> StorageVariableVal 
-intToVariableVal val = StorageVariableVal val 
+intToVariableVal :: Int -> StateVariableVal 
+intToVariableVal val = StateVariableVal val 
 
 --Replace function for ints 
 replace :: Int -> [Int] -> [Int]
@@ -39,7 +39,7 @@ replace val (x:xs)
                 | val == x = 3 : xs
                 | otherwise = x : replace val xs
 
--- Generates an Empty Storage
-createEmptyState :: Storage 
+-- Generates an Empty State
+createEmptyState :: State 
 createEmptyState = []
 
