@@ -1,4 +1,4 @@
-module Stack (Stack , pushInt, pushBool, pop, top, createEmptyStack, isEmpty, size, fromStackElementInt, fromStackElementString, stackElementStringToBool, isNumber) where 
+module Stack (Stack , pushInt, pushBool, pop, top, createEmptyStack, isEmpty, size, fromStackElementInt, fromStackElementString, stackElementStringToBool, isNumber, stack2Str) where 
 
 data StackElement = StackInt Int | StackString String
     deriving (Show, Eq, Ord)
@@ -58,11 +58,13 @@ isNumber :: StackElement -> Bool
 isNumber (StackInt num) = True 
 isNumber _ = False
 
+-- Once our data type uses strings we translate the "tt" and "ff" values to the expected output ones
 outputCorrectValue :: String -> String
 outputCorrectValue "tt" = "True"
 outputCorrectValue "ff" = "False"
 outputCorrectValue _ = error "Run-time error"
 
+-- Outputs the Stacks contents in a string
 stack2Str :: Stack -> String
 stack2Str [] = []
 stack2Str (x:[])

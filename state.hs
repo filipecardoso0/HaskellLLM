@@ -1,4 +1,4 @@
-module State where 
+module State (State, StateVariable, createEmptyState, getVariableVal, isBoolVariableValType, variableValToInt, variableValToBool, intToVariableVal, boolToVariableVal, updateVariable, state2Str, str2StateVar) where
 
 import Data.List (sortOn)
 
@@ -49,9 +49,9 @@ boolToVariableVal val = (StateVariableValBool val)
 
 -- Updates the value bound to var 
 updateVariable :: StateVariable -> StateVariableVal -> State -> State
-updateVariable _ _ [] = error "Run-time error"
-updateVariable var newvarval (x:xs)
-                                | (fst x == var) = (var, newvarval) : xs
+updateVariable var newvarval [] = (var, newvarval) : [] --Variable does not exist so, its added
+updateVariable var newvarval (x:xs) 
+                                | (fst x == var) = (var, newvarval) : xs 
                                 | otherwise = x : updateVariable var newvarval xs 
 
 -- Converts the StateVariable into a String
@@ -82,3 +82,7 @@ state2StrAux (x:xs) = ((fst x) ++ "=" ++ stateVariableVal2Str (snd x)) ++ "," ++
 -- Turns the Raw State into a String using the auxiliary function state2StrAux
 state2Str :: State -> String
 state2Str state = state2StrAux (sortState state)
+
+-- Converts a String to State Variable 
+str2StateVar :: String -> StateVariable
+str2StateVar str = (StateVariable str)
