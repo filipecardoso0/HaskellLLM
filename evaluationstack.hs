@@ -53,16 +53,21 @@ le stack = if (isNumber(elem1) && isNumber(elem2))
         elem2 = top(pop(stack))
         updatedStack = pop(pop(stack))
 
--- Pushes the value bound to var onto the stack 
+-- pushes the value bound to var onto the stack
 fetch :: StateVariable -> State -> Stack -> Stack
-fetch var state stack = pushInt val stack 
-        where val = variableValToInt(getVariableVal var state)
+fetch var state stack           
+                | isBoolVariableValType variableval = pushBool (variableValToBool variableval) stack
+                | otherwise = pushInt (variableValToInt variableval) stack
+                where variableval = getVariableVal var state
 
--- pops the topmost element of the stack and updates the State so that the popped value is bound to x
+-- pops the topmost element of the stack and updates the State so that the popped value is bound to var
 store :: StateVariable -> Stack -> State -> EvaluationStack
 store var stack state = (newstack, newstate)
         where newstack = pop(stack) 
-              newstate = updateVariable var (intToVariableVal(fromStackElementInt(top stack))) state
+              newstate 
+                      | isNumber topelem = updateVariable var (intToVariableVal(fromStackElementInt(top stack))) state
+                      | otherwise = updateVariable var (boolToVariableVal(stackElementStringToBool(fromStackElementString(top stack)))) state
+                      where topelem = top stack
 
 -- returns the input stack and state (state)
 noop :: Stack -> State -> EvaluationStack

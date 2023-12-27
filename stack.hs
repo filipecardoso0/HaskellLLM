@@ -1,4 +1,4 @@
-module Stack (Stack , pushInt, pushBool, pop, top, createEmptyStack, isEmpty, size, fromStackElementInt, fromStackElementString, isNumber) where 
+module Stack (Stack , pushInt, pushBool, pop, top, createEmptyStack, isEmpty, size, fromStackElementInt, fromStackElementString, stackElementStringToBool, isNumber) where 
 
 data StackElement = StackInt Int | StackString String
     deriving (Show, Eq, Ord)
@@ -37,15 +37,21 @@ pop _ = error "Run-time error"
 size :: Stack -> Int
 size (xs) = length xs
 
--- Converts a StackElementString back to String
+-- Converts a StackElementInt back to Int 
 fromStackElementInt :: StackElement -> Int 
 fromStackElementInt (StackInt num) = num
 fromStackElementInt _ = error "Run-time error"
 
--- Converts a StackElementInt back to Int 
+-- Converts a StackElementString back to String
 fromStackElementString :: StackElement -> String
 fromStackElementString (StackString str) = str
 fromStackElementString _ = error "Run-time error"
+
+-- Assigns a StackElementString to its correct Boolean Value
+stackElementStringToBool :: String -> Bool 
+stackElementStringToBool str 
+                    | str == "tt" = True
+                    | str == "ff" = False
 
 -- Verify if the element on the stack is a number
 isNumber :: StackElement -> Bool 
