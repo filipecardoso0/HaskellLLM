@@ -1,6 +1,10 @@
 module Program where
 
 import Assembler
+import Text.Parsec
+import Text.Parsec.Language (emptyDef)
+import Text.Parsec.String (Parser)
+import Text.Parsec.Token qualified as Tok
 
 data Aexp = N Integer | V String | Add Aexp Aexp | Mult Aexp Aexp | Sub Aexp Aexp | Neg Aexp deriving (Show)
 
@@ -37,3 +41,50 @@ compile (command : rest) = case command of
   While x a -> Loop (compB x) (compile a) : compile rest
   Skip -> compile rest
   Comp s1 s2 -> compile (s1 : s2 : rest)
+
+lexer :: Token.TokenParser ()
+lexer = Token.makeTokenParser emptyDef
+
+integer :: Parser Integer
+integer = Token.integer lexer
+
+identifier :: Parser String
+identifier = Token.identifier lexer
+
+parens :: Parser a -> Parser a
+parens = Token.parens lexer
+
+semiSep :: Parser a -> Parser [a]
+semiSep = Token.semiSep lexer
+
+parseAexp :: Parser Aexp
+parseAexp =
+  parens parseAexp
+    <|> liftM N integer
+    <|> liftM V identifier
+    <|> liftM2 Add (parseAexp <* symbol "+") parseAexp
+    <|> liftM2 Mult (parseAexp <* symbol "*") parseAexp
+    <|> liftM2 Sub (parseAexp <* symbol "-") parseAexp
+    <|> liftM Neg (symbol "-" *> parseAexp)
+
+parseBexp :: Parser Bexp
+parseBexp =
+  parens parseBexp
+    <|> (symbol "True" >> return T)
+    <|> (symbol "False" >> return F)
+    <|> liftM Not (symbol "not" *> parseBexp)
+    <|> liftM2 And (parseBexp <* symbol "and") parseBexp
+    <|> liftM2 Or (parseBexp <* symbol "or") parseBexp
+    <|> liftM2 Eq (parseAexp <* symbol "==") parseAexp
+    <|> liftM2 Le (parseAexp <* symbol "<=") parseAexp
+
+parseStm :: Parser Stm
+parseStm =
+  parens parseStm
+    <|> liftM Aexp parseAexp
+    <|> liftM Bexp parseBexp
+    <|> liftM2 Ass (identifier <* symbol "=") parseAexp
+    <|> (symbol "skip" >> return Skip)
+    <|> liftM2 Comp (parseStm <* symbol ";") parseStm
+    <|> liftM3 If (symbol "if" *> parseBexp <* symbol "then") (semiSep parseStm <* symbol "else") (semiSep parseStm)
+    <|> liftM2 While (symbol "while" *> parseBexp <* symbol "do") (semiSep parseStm)

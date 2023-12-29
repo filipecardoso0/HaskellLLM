@@ -2,16 +2,17 @@ module Assembler where
 
 import Program
 import State
-    ( boolToVariableVal,
-      getVariableVal,
-      intToVariableVal,
-      isBoolVariableValType,
-      str2StateVar,
-      updateVariable,
-      variableValToBool,
-      variableValToInt,
-      State,
-      StateVariable )import State
+  ( State,
+    StateVariable,
+    boolToVariableVal,
+    getVariableVal,
+    intToVariableVal,
+    isBoolVariableValType,
+    str2StateVar,
+    updateVariable,
+    variableValToBool,
+    variableValToInt,
+  )
 
 data Inst
   = Push Integer
