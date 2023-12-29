@@ -1,10 +1,24 @@
 -- Part 1
 
 -- Do not modify our definition of Inst and Code
-data Inst =
-  Push Integer | Add | Mult | Sub | Tru | Fals | Equ | Le | And | Neg | Fetch String | Store String | Noop |
-  Branch Code Code | Loop Code Code
-  deriving Show
+data Inst
+  = Push Integer
+  | Add
+  | Mult
+  | Sub
+  | Tru
+  | Fals
+  | Equ
+  | Le
+  | And
+  | Neg
+  | Fetch String
+  | Store String
+  | Noop
+  | Branch Code Code
+  | Loop Code Code
+  deriving (Show)
+
 type Code = [Inst]
 
 -- createEmptyStack :: Stack
@@ -25,7 +39,8 @@ run = undefined -- TODO
 -- To help you test your assembler
 testAssembler :: Code -> (String, String)
 testAssembler code = (stack2Str stack, state2Str state)
-  where (_,stack,state) = run(code, createEmptyStack, createEmptyState)
+  where
+    (_, stack, state) = run (code, createEmptyStack, createEmptyState)
 
 -- Examples:
 -- testAssembler [Push 10,Push 4,Push 3,Sub,Mult] == ("-10","")

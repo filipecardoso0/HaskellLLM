@@ -3,43 +3,46 @@ module State (State, StateVariable, createEmptyState, getVariableVal, isBoolVari
 import Data.List (sortOn)
 
 data StateVariable = StateVariable String
-    deriving (Show, Eq)
-data StateVariableVal = StateVariableValInt Int | StateVariableValBool Bool 
-    deriving (Show, Eq)
-type StateTuple = (StateVariable, StateVariableVal) 
+  deriving (Show, Eq)
+
+data StateVariableVal = StateVariableValInt Int | StateVariableValBool Bool
+  deriving (Show, Eq)
+
+type StateTuple = (StateVariable, StateVariableVal)
+
 type State = [StateTuple]
 
 -- Generates an Empty State
-createEmptyState :: State 
+createEmptyState :: State
 createEmptyState = []
 
--- Gets the head of the state list  
+-- Gets the head of the state list
 getStateHead :: State -> StateTuple
-getStateHead (xs) = head(xs)
+getStateHead (xs) = head (xs)
 
--- Gets the value bound to var 
+-- Gets the value bound to var
 getVariableVal :: StateVariable -> State -> StateVariableVal
 getVariableVal _ [] = error "Run-time error"
-getVariableVal var (x:xs) 
-                        | (fst (x) == var) = snd x
-                        | otherwise = getVariableVal var (xs)
+getVariableVal var (x : xs)
+  | (fst (x) == var) = snd x
+  | otherwise = getVariableVal var (xs)
 
 -- Detects if wheter the VariableValType is Bool or not
-isBoolVariableValType :: StateVariableVal -> Bool 
-isBoolVariableValType (StateVariableValBool _) = True 
-isBoolVariableValType _ = False 
+isBoolVariableValType :: StateVariableVal -> Bool
+isBoolVariableValType (StateVariableValBool _) = True
+isBoolVariableValType _ = False
 
--- Converts StateVariableValInt to Int 
-variableValToInt :: StateVariableVal -> Int 
-variableValToInt (StateVariableValInt val) = val 
+-- Converts StateVariableValInt to Int
+variableValToInt :: StateVariableVal -> Int
+variableValToInt (StateVariableValInt val) = val
 variableValToInt _ = error "Run-time error"
 
 -- Converts StateVariableValBool to Bool
-variableValToBool :: StateVariableVal -> Bool 
-variableValToBool (StateVariableValBool val) = val 
+variableValToBool :: StateVariableVal -> Bool
+variableValToBool (StateVariableValBool val) = val
 variableValToBool _ = error "Run-time error"
 
--- Converts Int to StateVariableValInt 
+-- Converts Int to StateVariableValInt
 intToVariableVal :: Int -> StateVariableVal
 intToVariableVal val = (StateVariableValInt val)
 
@@ -47,12 +50,12 @@ intToVariableVal val = (StateVariableValInt val)
 boolToVariableVal :: Bool -> StateVariableVal
 boolToVariableVal val = (StateVariableValBool val)
 
--- Updates the value bound to var 
+-- Updates the value bound to var
 updateVariable :: StateVariable -> StateVariableVal -> State -> State
-updateVariable var newvarval [] = (var, newvarval) : [] --Variable does not exist so, its added
-updateVariable var newvarval (x:xs) 
-                                | (fst x == var) = (var, newvarval) : xs 
-                                | otherwise = x : updateVariable var newvarval xs 
+updateVariable var newvarval [] = (var, newvarval) : [] -- Variable does not exist so, its added
+updateVariable var newvarval (x : xs)
+  | (fst x == var) = (var, newvarval) : xs
+  | otherwise = x : updateVariable var newvarval xs
 
 -- Converts the StateVariable into a String
 variableToString :: StateVariable -> String
@@ -61,7 +64,7 @@ variableToString (StateVariable var) = var
 -- Converts the StateValuesVar into String
 convertStateValuesVar :: State -> [(String, StateVariableVal)]
 convertStateValuesVar [] = []
-convertStateValuesVar (x:xs) = (variableToString(fst x), snd x) : convertStateValuesVar xs 
+convertStateValuesVar (x : xs) = (variableToString (fst x), snd x) : convertStateValuesVar xs
 
 -- Sorts the Tuple List according to the Variable type
 sortState :: State -> [(String, StateVariableVal)]
@@ -70,19 +73,19 @@ sortState state = sortOn fst (convertStateValuesVar state)
 -- Converts StateVariableVal into a String
 stateVariableVal2Str :: StateVariableVal -> String
 stateVariableVal2Str val
-                    | isBoolVariableValType val = show(variableValToBool val)
-                    | otherwise = show(variableValToInt val)
+  | isBoolVariableValType val = show (variableValToBool val)
+  | otherwise = show (variableValToInt val)
 
--- Turns the Converted State Data into a String 
+-- Turns the Converted State Data into a String
 state2StrAux :: [(String, StateVariableVal)] -> String
 state2StrAux [] = []
-state2StrAux (x:[]) = ((fst x) ++ "=" ++ stateVariableVal2Str (snd x)) ++ state2StrAux [] 
-state2StrAux (x:xs) = ((fst x) ++ "=" ++ stateVariableVal2Str (snd x)) ++ "," ++ state2StrAux xs 
+state2StrAux (x : []) = ((fst x) ++ "=" ++ stateVariableVal2Str (snd x)) ++ state2StrAux []
+state2StrAux (x : xs) = ((fst x) ++ "=" ++ stateVariableVal2Str (snd x)) ++ "," ++ state2StrAux xs
 
 -- Turns the Raw State into a String using the auxiliary function state2StrAux
 state2Str :: State -> String
 state2Str state = state2StrAux (sortState state)
 
--- Converts a String to State Variable 
+-- Converts a String to State Variable
 str2StateVar :: String -> StateVariable
 str2StateVar str = (StateVariable str)
