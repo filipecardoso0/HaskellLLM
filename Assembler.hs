@@ -1,6 +1,6 @@
 module Assembler where
 
-import Program
+import Stack
 import State
   ( State,
     StateVariable,
