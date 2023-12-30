@@ -1,6 +1,7 @@
 module Test where
 
 import Assembler
+import Data
 import Program
 import Stack
 import State

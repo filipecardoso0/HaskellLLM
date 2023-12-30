@@ -46,108 +46,108 @@ lexer str
         let (token, rest) = break (`elem` " ();=+-*<:") str
          in token : lexer rest
 
-buildData :: [String] -> [Stm]
-buildData [] = []
-buildData list = case findNotInner [";"] list of
+parseStatements :: [String] -> [Stm]
+parseStatements [] = []
+parseStatements tokens = case locateOuterTarget [";"] tokens of
   Just index ->
-    let (stm, rest) = splitAt index list
-     in if head stm == "("
-          then buildData (tail (init stm))
-          else case rest of
-            [_] -> [buildStm stm]
-            _ -> buildStm stm : buildData (tail rest)
-  Nothing -> buildData (tail (init list))
+    let (statementTokens, remainingTokens) = splitAt index tokens
+     in if head statementTokens == "("
+          then parseStatements (tail (init statementTokens))
+          else case remainingTokens of
+            [_] -> [constructStatement statementTokens]
+            _ -> constructStatement statementTokens : parseStatements (tail remainingTokens)
+  Nothing -> parseStatements (tail (init tokens))
 
-buildStm :: [String] -> Stm
-buildStm list =
+constructStatement :: [String] -> Stm
+constructStatement list =
   case head list of
     "if" ->
       let (bexp, rest) = break (== "then") list
-       in case findNotInner ["else"] (tail rest) of
+       in case locateOuterTarget ["else"] (tail rest) of
             Just index ->
               let (stm1, stm2) = splitAt index (tail rest)
                in case head (tail stm2) of
-                    "(" -> IfStm (buildBexp (tail bexp)) (buildData stm1) (buildData (tail stm2))
-                    _ -> IfStm (buildBexp (tail bexp)) (buildData stm1) [buildStm (tail stm2)]
+                    "(" -> IfStm (constructBooleanExpression (tail bexp)) (parseStatements stm1) (parseStatements (tail stm2))
+                    _ -> IfStm (constructBooleanExpression (tail bexp)) (parseStatements stm1) [constructStatement (tail stm2)]
     "while" ->
       let (bexp, stm) = break (== "do") list
        in case head (tail stm) of
-            "(" -> WhileStm (buildBexp (tail bexp)) (buildData (tail stm))
-            _ -> WhileStm (buildBexp (tail bexp)) [buildStm (tail stm)]
+            "(" -> WhileStm (constructBooleanExpression (tail bexp)) (parseStatements (tail stm))
+            _ -> WhileStm (constructBooleanExpression (tail bexp)) [constructStatement (tail stm)]
     _ ->
       let (var, aexp) = break (== ":=") list
-       in AssStm (head var) (buildAexp (tail aexp))
+       in AssStm (head var) (constructArithmeticExpression (tail aexp))
 
-findNotInner :: [String] -> [String] -> Maybe Int
-findNotInner targets = find 0 0
+locateOuterTarget :: [String] -> [String] -> Maybe Int
+locateOuterTarget targets = locate 0 0
   where
-    find _ _ [] = Nothing
-    find depth index (x : rest) =
-      case x of
-        "(" -> find (depth + 1) (index + 1) rest
-        "then" -> find (depth + 1) (index + 1) rest
-        ")" -> find (depth - 1) (index + 1) rest
-        "else" | depth /= 0 -> find (depth - 1) (index + 1) rest
+    locate _ _ [] = Nothing
+    locate depth position (token : remainingTokens) =
+      case token of
+        "(" -> locate (depth + 1) (position + 1) remainingTokens
+        "then" -> locate (depth + 1) (position + 1) remainingTokens
+        ")" -> locate (depth - 1) (position + 1) remainingTokens
+        "else" | depth /= 0 -> locate (depth - 1) (position + 1) remainingTokens
         _ ->
-          if depth == 0 && (x `elem` targets)
-            then Just index
-            else find depth (index + 1) rest
+          if depth == 0 && (token `elem` targets)
+            then Just position
+            else locate depth (position + 1) remainingTokens
 
-buildAexp :: [String] -> Aexp
-buildAexp [x] = if all isDigit x then Num (read x) else Var x
-buildAexp list =
-  case findNotInner ["+", "-"] (reverse list) of
+constructArithmeticExpression :: [String] -> Aexp
+constructArithmeticExpression [x] = if all isDigit x then Num (read x) else Var x
+constructArithmeticExpression tokens =
+  case locateOuterTarget ["+", "-"] (reverse tokens) of
     Just reversedIndex ->
-      let index = length list - reversedIndex - 1
-          (before, after) = splitAt index list
-       in if list !! index == "+"
-            then AddAexp (buildAexp before) (buildAexp (tail after))
-            else SubAexp (buildAexp before) (buildAexp (tail after))
+      let index = length tokens - reversedIndex - 1
+          (before, after) = splitAt index tokens
+       in if tokens !! index == "+"
+            then AddAexp (constructArithmeticExpression before) (constructArithmeticExpression (tail after))
+            else SubAexp (constructArithmeticExpression before) (constructArithmeticExpression (tail after))
     Nothing ->
-      case findNotInner ["*"] (reverse list) of
+      case locateOuterTarget ["*"] (reverse tokens) of
         Just reversedIndex ->
-          let index = length list - reversedIndex - 1
-              (before, after) = splitAt index list
-           in MultAexp (buildAexp before) (buildAexp (tail after))
-        Nothing -> buildAexp (tail (init list))
+          let index = length tokens - reversedIndex - 1
+              (before, after) = splitAt index tokens
+           in MultAexp (constructArithmeticExpression before) (constructArithmeticExpression (tail after))
+        Nothing -> constructArithmeticExpression (tail (init tokens))
 
-buildBexp :: [String] -> Bexp
-buildBexp [x] =
+constructBooleanExpression :: [String] -> Bexp
+constructBooleanExpression [x] =
   case x of
     "True" -> TrueBexp
     "False" -> FalseBexp
     _ -> error "Run-time error"
-buildBexp list =
-  case findNotInner ["and"] (reverse list) of
+constructBooleanExpression tokens =
+  case locateOuterTarget ["and"] (reverse tokens) of
     Just reversedIndex ->
-      let index = length list - reversedIndex - 1
-          (before, after) = splitAt index list
-       in AndBexp (buildBexp before) (buildBexp (tail after))
+      let index = length tokens - reversedIndex - 1
+          (before, after) = splitAt index tokens
+       in AndBexp (constructBooleanExpression before) (constructBooleanExpression (tail after))
     Nothing ->
-      case findNotInner ["="] (reverse list) of
+      case locateOuterTarget ["="] (reverse tokens) of
         Just reversedIndex ->
-          let index = length list - reversedIndex - 1
-              (before, after) = splitAt index list
-           in EqBexp (buildBexp before) (buildBexp (tail after))
+          let index = length tokens - reversedIndex - 1
+              (before, after) = splitAt index tokens
+           in EqBexp (constructBooleanExpression before) (constructBooleanExpression (tail after))
         Nothing ->
-          case findNotInner ["not"] (reverse list) of
+          case locateOuterTarget ["not"] (reverse tokens) of
             Just reversedIndex ->
-              let index = length list - reversedIndex - 1
-                  after = drop index list
-               in NotBexp (buildBexp (tail after))
+              let index = length tokens - reversedIndex - 1
+                  after = drop index tokens
+               in NotBexp (constructBooleanExpression (tail after))
             Nothing ->
-              case findNotInner ["=="] (reverse list) of
+              case locateOuterTarget ["=="] (reverse tokens) of
                 Just reversedIndex ->
-                  let index = length list - reversedIndex - 1
-                      (before, after) = splitAt index list
-                   in EquBexp (buildAexp before) (buildAexp (tail after))
+                  let index = length tokens - reversedIndex - 1
+                      (before, after) = splitAt index tokens
+                   in EquBexp (constructArithmeticExpression before) (constructArithmeticExpression (tail after))
                 Nothing ->
-                  case findNotInner ["<="] (reverse list) of
+                  case locateOuterTarget ["<="] (reverse tokens) of
                     Just reversedIndex ->
-                      let index = length list - reversedIndex - 1
-                          (before, after) = splitAt index list
-                       in LeBexp (buildAexp before) (buildAexp (tail after))
-                    Nothing -> buildBexp (tail (init list))
+                      let index = length tokens - reversedIndex - 1
+                          (before, after) = splitAt index tokens
+                       in LeBexp (constructArithmeticExpression before) (constructArithmeticExpression (tail after))
+                    Nothing -> constructBooleanExpression (tail (init tokens))
 
 parse :: String -> [Stm]
-parse = buildData . lexer
+parse = parseStatements . lexer
