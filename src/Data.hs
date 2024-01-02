@@ -23,3 +23,5 @@ data Stm
   | IfStm Bexp [Stm] [Stm]
   | WhileStm Bexp [Stm]
   deriving (Show)
+
+type Program = [Stm]
